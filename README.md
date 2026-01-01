@@ -1,10 +1,18 @@
-# docker-transcribe-server
+# docker-transcribers
 
-OpenAI Compatible Transcribe API Server.
-Supported models:
+A dockerized environment to run all kinds of ASR/transcription AI models.
+
+You can run it via CLI, or as OpenAI Compatible Transcribe API Server.
+
+Supported local models:
 - openai-whisper
 - faster-whisper
 - glm-asr-nano-2512
+
+Supported remote providers:
+- openai
+- lemonfoxai
+- assembelyai
 
 ## Features
 
@@ -17,29 +25,28 @@ Supported models:
 ## Requirements
 
 - Docker
+- GPU for local models
+- API Key for remote providers
 
 ## Run in Docker
 
 ```
 touch .env
-# override env vars in .env, e.g.: PORT=8000
+# override env vars in .env, e.g.:
+# PORT=8000
+# TRANSCRIBER_BACKEND=glm
 make build
+
+# run as api server
 make server
+./test_server.sh
+
+# or run via cli
+make shell
+# you should be in container now
+./transcribers.py --help
+./transcribers.py data/audio.mp3 --backend lemonfoxai --format srt
 ```
-
-## Usage
-
-### Transcribe Audio
-
-```bash
-curl -X POST "http://localhost:8000/v1/audio/transcriptions" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@audio.mp3"
-```
-
-## API Documentation
-
-Interactive API documentation is available at `http://localhost:8000/docs` when the server is running.
 
 ## Clients
 
@@ -52,8 +59,11 @@ Both frontends are designed to work seamlessly with this GLM-ASR server's OpenAI
 
 To use it in Spokenly:
 
-![Spokenly iOS app](./img/spokenly.jpeg)
-
+```
+URL: http://192.168.20.9:8000
+API Key: (empty)
+Model: (empty)
+```
 
 ## Model
 
