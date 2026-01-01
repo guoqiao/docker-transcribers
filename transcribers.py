@@ -44,8 +44,10 @@ class Transcriber:
         file = self.clean_file(file)
         language = self.clean_language(language)
         format = self.clean_format(format)
+        t0 = time.time()
         text = self._transcribe(file, language=language, format=format)
-        logger.info(f"transcript:\n{text}\n")
+        t = time.time() - t0
+        logger.info(f"transcribing done in {t:.1f}s: \n{text}\n")
         return text
 
 
@@ -153,8 +155,6 @@ class GLMASRTranscriber(Transcriber):
 
     def _transcribe(self, file, language: str = None, format: str = "text"):
         # audio: path, ndarray, torch.Tensor
-        logger.info(f"transcribing audio ...")
-        t0 = time.time()
         inputs = self.processor.apply_transcription_request(file)
         inputs = inputs.to(self.model.device, dtype=self.model.dtype)
         outputs = self.model.generate(
@@ -163,8 +163,6 @@ class GLMASRTranscriber(Transcriber):
             max_new_tokens=self.max_new_tokens,
         )
         decoded_outputs = self.processor.batch_decode(outputs[:, inputs.input_ids.shape[1] :], skip_special_tokens=True)
-        t = time.time() - t0
-        logger.info(f"transcribing audio completed in {t:.1f}s")
         return decoded_outputs[0]
 
 
@@ -265,7 +263,7 @@ class FasterWhisperCPUTranscriber(FasterWhisperTranscriber):
 
 
 def get_transcriber(backend: str = "") -> Transcriber:
-    backend = backend or os.getenv("TRANSCRIBER_BACKEND", "lemonfoxai")
+    backend = backend or os.getenv("TRANSCRIBER_BACKEND", "glm-asr")
     if backend in ["lemonfoxai", "lemonfox", "lemonfox-ai"]:
         return LemonfoxAITranscriber()
     if backend in ["assembly", "assemblyai", "aai"]:
@@ -284,7 +282,7 @@ def get_transcriber(backend: str = "") -> Transcriber:
         return FasterWhisperCPUTranscriber()
 
 
-def transcribe(file: str, language: str = None, format: str = "text", backend: str = "lemonfoxai") -> str:
+def transcribe(file: str, language: str = None, format: str = "text", backend: str = "") -> str:
     transcriber = get_transcriber(backend)
     transcriber.load()
     return transcriber.transcribe(file, language=language, format=format)
