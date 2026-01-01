@@ -4,7 +4,7 @@ SHELL = bash
 include .env
 export
 
-app := glm-asr-server
+app := transcribers
 # pass --gpus=all only when nvidia-smi available
 gpus := $(shell which nvidia-smi > /dev/null && echo "--gpus=all" || echo "")
 
