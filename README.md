@@ -2,7 +2,7 @@
 
 A dockerized environment to run all kinds of ASR/transcription AI models.
 
-You can run it via CLI, or as OpenAI Compatible Transcribe API Server.
+You can run it via CLI, or as OpenAI Compatible Transcription API Server.
 
 Supported local models:
 - openai-whisper
@@ -14,13 +14,7 @@ Supported remote providers:
 - lemonfoxai
 - assembelyai
 
-## Features
-
-- **OpenAI-compatible API**: Drop-in replacement for OpenAI's audio transcription endpoint
-- **Multi-format support**: Handles various audio formats via FFmpeg
-- **GPU acceleration**: CUDA support for fast inference
-- **Streaming ready**: FastAPI-based architecture for easy extension
-- **Docker support**: Production-ready containerized deployment
+more comming.
 
 ## Requirements
 
