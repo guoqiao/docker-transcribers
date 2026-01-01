@@ -265,7 +265,7 @@ class FasterWhisperCPUTranscriber(FasterWhisperTranscriber):
 
 
 def get_transcriber(backend: str = "") -> Transcriber:
-    backend = backend or os.getenv("TRANSCRIBE_BACKEND", "lemonfoxai")
+    backend = backend or os.getenv("TRANSCRIBER_BACKEND", "lemonfoxai")
     if backend in ["lemonfoxai", "lemonfox", "lemonfox-ai"]:
         return LemonfoxAITranscriber()
     if backend in ["assembly", "assemblyai", "aai"]:
