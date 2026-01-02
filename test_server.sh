@@ -6,7 +6,7 @@ file=${1:-data/audio.mp3}
 format=${2:-text}
 language=${3:-zh}
 
-curl -s -X POST "http://localhost:8000/v1/audio/transcriptions" \
+curl -sS -X POST "http://localhost:8000/v1/audio/transcriptions" \
     -H "Content-Type: multipart/form-data" \
     -F "file=@${file}" \
     -F "response_format=${format}" \
