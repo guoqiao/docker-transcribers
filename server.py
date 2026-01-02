@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from loguru import logger
 import torch
 from fastapi import FastAPI, Form, File, UploadFile
+from fastapi.responses import PlainTextResponse
 
 from transcribers import get_transcriber, func_time, context_time
 
@@ -37,15 +38,29 @@ def save_uploadfile(uploadfile: UploadFile, out_dir: Path) -> Path:
 @app.post("/v1/audio/transcriptions")
 async def transcribe(
     file: UploadFile = File(...),
-    model: typing.Annotated[str, Form()] = "whisper-1",  # placeholder
-    language: typing.Annotated[str, Form()] = None,
-    response_format: typing.Annotated[str, Form()] = "text",  # text, srt, vtt
+    model: typing.Annotated[str, Form()] = None,  # whisper-1
+    language: typing.Annotated[str, Form()] = None,  # None for auto detect
+    response_format: typing.Annotated[str, Form()] = None,  # json, text, srt, vtt
 ):
     """Transcribe audio file to text."""
-    logger.info(f"{transcriber.__class__.__name__} transcribing {type(file)} {file.filename} -> language {language} format {response_format}")
+    logger.info(f"{transcriber.__class__.__name__} transcribing {type(file)} {file.filename} model {model} -> language {language} format {response_format}")
+
+    response_format = response_format or "json"
+
+    if response_format == "json":
+        format = "text"  # json == {"text": text}
+    else:
+        format = response_format  # text, srt
+
     with tempfile.TemporaryDirectory() as temp_dir:
         file_path = save_uploadfile(file, Path(temp_dir))
-        return transcriber.transcribe(file_path, language=language, format=response_format)
+        # format: text, srt
+        text = transcriber.transcribe(file_path, language=language, format=format)
+
+    if response_format == "json":
+        return {"text": text}
+    else:
+        return PlainTextResponse(text)
 
 
 if __name__ == "__main__":
