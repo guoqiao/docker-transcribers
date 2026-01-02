@@ -46,6 +46,7 @@ async def transcribe(
     logger.info(f"{transcriber.__class__.__name__} transcribing {type(file)} {file.filename} model {model} -> language {language} format {response_format}")
 
     response_format = response_format or "json"
+    language = language or None  # must be None for auto detect, in case it's ""
 
     if response_format == "json":
         format = "text"  # json == {"text": text}
