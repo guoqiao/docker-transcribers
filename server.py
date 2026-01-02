@@ -27,12 +27,11 @@ app = FastAPI(lifespan=lifespan)
 
 
 @func_time
-def save_uploadfile(uploadfile: UploadFile) -> str:
-    temp_dir = Path(tempfile.mkdtemp())
-    temp_file = temp_dir / uploadfile.filename
-    temp_file.write_bytes(uploadfile.file.read())
-    logger.info(f"upload file saved to {temp_file}")
-    return temp_file
+def save_uploadfile(uploadfile: UploadFile, out_dir: Path) -> Path:
+    file_path = out_dir / uploadfile.filename
+    file_path.write_bytes(uploadfile.file.read())
+    logger.info(f"uploadfile saved to {file_path}")
+    return file_path
 
 
 @app.post("/v1/audio/transcriptions")
@@ -44,15 +43,9 @@ async def transcribe(
 ):
     """Transcribe audio file to text."""
     logger.info(f"{transcriber.__class__.__name__} transcribing {type(file)} {file.filename} -> language {language} format {response_format}")
-
-    # load can accept a file-like object
-    # file.file: SpooledTemporaryFile
-    # supported formats: wav|mp3|flac|ogg
-    # sr=None to keep orig sample rate
-    # audio_ndarray, sr = librosa.load(file.file, sr=16000)
-    file_path = save_uploadfile(file)
-    # path/ndarray/torch.Tensor
-    return transcriber.transcribe(file_path, language=language, format=response_format)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        file_path = save_uploadfile(file, Path(temp_dir))
+        return transcriber.transcribe(file_path, language=language, format=response_format)
 
 
 if __name__ == "__main__":
