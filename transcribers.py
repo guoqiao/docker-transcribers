@@ -23,6 +23,16 @@ def sec2ts(t: float|str) -> str:
     return f"{h:02d}:{m:02d}:{s:02d}.{ms:03d}"
 
 
+def file2ndarray(file_like, sr=16000):
+    # convert file-like object to ndarray
+    # load can accept a file-like object
+    # uploadfile.file: SpooledTemporaryFile
+    # supported formats: wav|mp3|flac|ogg
+    # sr=None to keep orig sample rate
+    ndarray, sr = librosa.load(file_like, sr=sr)
+    return ndarray
+
+
 class StopWatch:
     def __init__(self, task):
         self.task = task
