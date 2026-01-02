@@ -98,7 +98,8 @@ def run_script(script_path, *args):
     return run_cmd([script_path, *args])
 
 
-def ffmpeg_extract_audio(file: Path, ext: str = "opus") -> Path:
+def ffmpeg_extract_audio(file: Path, ext: str = "mp3") -> Path:
+    # openai does not support opus, use mp3 for default
     suffix = f".{ext}"
     if file.suffix.lower() == suffix:
         return file
@@ -110,7 +111,9 @@ def ffmpeg_extract_audio(file: Path, ext: str = "opus") -> Path:
 
 
 class Transcriber:
-    supported_formats = ["text", "txt"]
+
+    input_formats = ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']
+    output_formats = ["text"]
 
     @func_time
     def load(self):
@@ -122,13 +125,17 @@ class Transcriber:
         pass
 
     def clean_file(self, file: str) -> str:
-        # check file data type, ext, etc.
-        return ffmpeg_extract_audio(file)
+        # convert audio file type if not supported
+        ext = str(file).rsplit('.', maxsplit=1)[-1].lower()
+        if ext in self.input_formats:
+            return file
+        else:
+            return ffmpeg_extract_audio(file)
 
     def clean_format(self, format: str) -> bool:
-        if self.supported_formats:
-            if format not in self.supported_formats:
-                raise ValueError(f"requested format '{format}' not in {self.supported_formats}")
+        if self.output_formats:
+            if format not in self.output_formats:
+                raise ValueError(f"requested format '{format}' not in {self.output_formats}")
         return format
 
     def clean_language(self, language: str) -> str:
@@ -141,14 +148,14 @@ class Transcriber:
         language = self.clean_language(language)
         format = self.clean_format(format)
         with context_time(f"{self.__class__.__name__}._transcribe"):
-            text = self._transcribe(file, language=language, format=format)
-        logger.info(f"transcript: \n\n{text}\n")
-        return text
+            text = self._transcribe(file, language=language, format=format) or ""
+        logger.info(f"transcript: \n\n{text or 'empty'}\n")
+        return text.strip()
 
 
 class AssemblyAITranscriber(Transcriber):
 
-    supported_formats = ["text", "srt", "vtt"]
+    output_formats = ["text", "srt", "vtt"]
 
     def __init__(self):
         import assemblyai as aai
@@ -187,8 +194,8 @@ class AssemblyAITranscriber(Transcriber):
 
 class OpenAITranscriber(Transcriber):
 
-    supported_formats = ["text", "srt", "vtt"]
-    supported_audio_formats = ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']
+    input_formats = ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']
+    output_formats = ["text", "srt", "vtt"]
 
     def __init__(self, api_key: str = None, base_url: str = None):
         from openai import OpenAI
@@ -219,8 +226,8 @@ class OpenAITranscriber(Transcriber):
             # for 'json', ret is a Transcript obj
             return ret.text
         elif format in ["text", "srt", "vtt"]:
-            # ret is a json encoded str
-            return json.loads(ret)
+            # ret is str
+            return ret
         else:
             raise ValueError(f"Unsupported format: {format}")
 
@@ -236,7 +243,7 @@ class LemonfoxAITranscriber(OpenAITranscriber):
 
 class GLMASRTranscriber(Transcriber):
 
-    supported_formats = ["text"]
+    output_formats = ["text"]
     model_id = "zai-org/GLM-ASR-Nano-2512"
     max_new_tokens = 500
 
@@ -261,7 +268,7 @@ class GLMASRTranscriber(Transcriber):
 
 
 class WhisperTranscriber(Transcriber):
-    supported_formats = ["json", "text", "srt"]
+    output_formats = ["json", "text", "srt"]
     model_size = os.getenv("WHISPER_MODEL", "turbo")
 
     def _load(self):
@@ -303,7 +310,7 @@ class WhisperCPUTranscriber(WhisperTranscriber):
 
 class FasterWhisperTranscriber(Transcriber):
 
-    supported_formats = ["text", "srt"]
+    output_formats = ["text", "srt"]
 
     device = "cuda"
     compute_type = "float16"
