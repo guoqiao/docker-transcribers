@@ -2,7 +2,7 @@
 
 set -ueo pipefail
 
-# extract opus audio from input_path/audio for transcription
+# extract opus audio from input video/audio for transcription
 
 input_path="${1:-audio.mp3}"
 # use input dir as work dir
