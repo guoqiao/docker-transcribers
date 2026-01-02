@@ -11,8 +11,8 @@ Supported local models:
 
 Supported remote providers:
 - openai
+- assemblyai
 - lemonfoxai
-- assembelyai
 
 more comming.
 
