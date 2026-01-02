@@ -141,7 +141,9 @@ class Transcriber:
         language = self.clean_language(language)
         format = self.clean_format(format)
         with context_time(f"{self.__class__.__name__}._transcribe"):
-            return self._transcribe(file, language=language, format=format)
+            text = self._transcribe(file, language=language, format=format)
+        logger.info(f"transcript: \n\n{text}\n")
+        return text
 
 
 class AssemblyAITranscriber(Transcriber):
@@ -185,7 +187,8 @@ class AssemblyAITranscriber(Transcriber):
 
 class OpenAITranscriber(Transcriber):
 
-    supported_formats = ["txt", "text", "srt"]
+    supported_formats = ["text", "srt", "vtt"]
+    supported_audio_formats = ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']
 
     def __init__(self, api_key: str = None, base_url: str = None):
         from openai import OpenAI
@@ -315,8 +318,6 @@ class FasterWhisperTranscriber(Transcriber):
         self.pipeline = BatchedInferencePipeline(model=self.model)
 
     def _transcribe(self, file: str, language: str = None, format: str = "text") -> str:
-
-        logger.info(f"transcibe with faster-whisper {self.model}: {file}")
         segments, info = self.pipeline.transcribe(
             file,
             language=language or None,
