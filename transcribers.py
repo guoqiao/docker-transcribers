@@ -258,6 +258,7 @@ class GLMASRTranscriber(Transcriber):
         # audio: path, ndarray, torch.Tensor
         inputs = self.processor.apply_transcription_request(str(file))
         inputs = inputs.to(self.model.device, dtype=self.model.dtype)
+        # torch.Tensor
         outputs = self.model.generate(
             **inputs,
             do_sample=False,
